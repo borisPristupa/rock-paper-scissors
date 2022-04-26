@@ -13,6 +13,8 @@ repositories {
 
 dependencies {
   implementation(kotlin("stdlib"))
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+  implementation("com.googlecode.lanterna:lanterna:3.1.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -30,7 +32,7 @@ sourceSets {
 }
 
 application {
-  mainClass.set("com.boris.rps.MainKt")
+  mainClass.set("com.boris.rps.v2.MainV2Kt")
 }
 
 tasks.register<Jar>("uberJar") {
