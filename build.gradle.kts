@@ -31,7 +31,7 @@ sourceSets {
 }
 
 application {
-  mainClass.set("com.boris.rps.v2.MainV2Kt")
+  mainClass.set("com.boris.rps.MainKt")
 }
 
 tasks.register<Jar>("uberJar") {
