@@ -1,8 +1,8 @@
 package com.boris.rps.v2
 
-import com.boris.rps.textCharacter
 import com.googlecode.lanterna.TerminalPosition
 import com.googlecode.lanterna.TerminalSize
+import com.googlecode.lanterna.TextCharacter
 import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.graphics.BasicTextImage
 import com.googlecode.lanterna.graphics.TextImage
@@ -561,6 +561,17 @@ class Player(private val actionSource: Queue<PlayerAction>, private val playerEn
 }
 
 // ------------------------------------------------------------------------------------------------
+
+fun textCharacter(
+  char: Char,
+  foreground: TextColor = TextColor.ANSI.BLACK_BRIGHT,
+  background: TextColor = TextColor.ANSI.WHITE_BRIGHT
+): TextCharacter {
+  return TextCharacter(' ')
+    .withCharacter(char)
+    .withForegroundColor(foreground)
+    .withBackgroundColor(background)
+}
 
 fun RPS.symbol(): Char {
   return when (this) {
