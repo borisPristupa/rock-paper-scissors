@@ -448,11 +448,6 @@ class Game(world: World, playField: PlayField) {
     require(playField.arena in world.arenas)
   }
 
-  fun changePlayField(playField: PlayField) {
-    require(playField.arena in world.arenas)
-    this.playField = playField
-  }
-
   fun reset(world: World, playField: PlayField) {
     require(playField.arena in world.arenas)
     val players = this.playField.arena.arenaMap.entities().map { it.entity }.filterIsInstance<PlayerEntity>()
