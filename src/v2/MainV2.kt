@@ -676,8 +676,7 @@ fun Game.draw(textImage: TextImage) {
 //  }
 // }
 
-fun main() /*= runBlocking*/ {
-  println()
+fun main() {
   DefaultTerminalFactory().createScreen().use { screen ->
     val roomSize = run {
       val width = screen.terminalSize.columns / 2
@@ -697,7 +696,6 @@ fun main() /*= runBlocking*/ {
     screen.terminal.addResizeListener { _, _ ->
       screen.clear()
     }
-//    loop(screen, game)
 
     while (true) {
       val input = screen.pollInput()
@@ -722,7 +720,6 @@ fun main() /*= runBlocking*/ {
       screen.newTextGraphics().drawImage(TerminalPosition.TOP_LEFT_CORNER, textImage)
       screen.refresh()
       Thread.sleep(1000L / 60)
-//      delay(1000L / 60)
     }
   }
 }

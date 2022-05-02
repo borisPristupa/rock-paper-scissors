@@ -13,7 +13,6 @@ repositories {
 
 dependencies {
   implementation(kotlin("stdlib"))
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
   implementation("com.googlecode.lanterna:lanterna:3.1.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
