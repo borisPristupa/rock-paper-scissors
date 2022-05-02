@@ -7,6 +7,7 @@ import com.googlecode.lanterna.TextColor
 import com.googlecode.lanterna.graphics.BasicTextImage
 import com.googlecode.lanterna.graphics.TextImage
 import com.googlecode.lanterna.input.KeyType
+import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
 import java.util.LinkedList
 import java.util.Queue
@@ -670,17 +671,32 @@ fun Game.draw(textImage: TextImage) {
 
 // ------------------------------------------------------------------------------------------------
 
-// fun loop(screen: TerminalScreen, game: Game) = runBlocking {
-//  while (true) {
-//    val key = screen.pollInput()?.toKey()
-//    when (val action = key?.let { keyMap[it] }) {
-//      GameAction.Exit -> break
-//      null -> game.tick()
-//      is GameAction.PlayerGameAction -> game.playerDo(action.playerAction)
-//    }
-//    game.draw(screen)
-//  }
-// }
+ fun loop(screen: TerminalScreen, game: Game, actors: List<Actor>, playerActionQueue: Queue<PlayerAction>) {
+   while (true) {
+     val input = screen.pollInput()
+     when {
+       input?.keyType == KeyType.ArrowUp -> playerActionQueue.add(PlayerAction.Go(Direction.Up))
+       input?.keyType == KeyType.ArrowDown -> playerActionQueue.add(PlayerAction.Go(Direction.Down))
+       input?.keyType == KeyType.ArrowLeft -> playerActionQueue.add(PlayerAction.Go(Direction.Left))
+       input?.keyType == KeyType.ArrowRight -> playerActionQueue.add(PlayerAction.Go(Direction.Right))
+       input?.keyType == KeyType.Escape -> break
+       input?.character == 'z' -> playerActionQueue.add(PlayerAction.Hit)
+     }
+
+     for (actor in actors) {
+       actor.makeTurn(game)
+     }
+
+     val textImage = BasicTextImage(
+       TerminalSize(screen.terminalSize.columns, screen.terminalSize.rows),
+       textCharacter(' ', background = TextColor.ANSI.BLACK_BRIGHT)
+     )
+     game.draw(textImage)
+     screen.newTextGraphics().drawImage(TerminalPosition.TOP_LEFT_CORNER, textImage)
+     screen.refresh()
+     Thread.sleep(1000L / 60)
+   }
+ }
 
 fun main() {
   DefaultTerminalFactory().createScreen().use { screen ->
@@ -703,29 +719,6 @@ fun main() {
       screen.clear()
     }
 
-    while (true) {
-      val input = screen.pollInput()
-      when {
-        input?.keyType == KeyType.ArrowUp -> playerActionQueue.add(PlayerAction.Go(Direction.Up))
-        input?.keyType == KeyType.ArrowDown -> playerActionQueue.add(PlayerAction.Go(Direction.Down))
-        input?.keyType == KeyType.ArrowLeft -> playerActionQueue.add(PlayerAction.Go(Direction.Left))
-        input?.keyType == KeyType.ArrowRight -> playerActionQueue.add(PlayerAction.Go(Direction.Right))
-        input?.keyType == KeyType.Escape -> break
-        input?.character == 'z' -> playerActionQueue.add(PlayerAction.Hit)
-      }
-
-      for (actor in actors) {
-        actor.makeTurn(game)
-      }
-
-      val textImage = BasicTextImage(
-        TerminalSize(screen.terminalSize.columns, screen.terminalSize.rows),
-        textCharacter(' ', background = TextColor.ANSI.BLACK_BRIGHT)
-      )
-      game.draw(textImage)
-      screen.newTextGraphics().drawImage(TerminalPosition.TOP_LEFT_CORNER, textImage)
-      screen.refresh()
-      Thread.sleep(1000L / 60)
-    }
+    loop(screen, game, actors, playerActionQueue)
   }
 }
