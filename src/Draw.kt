@@ -77,7 +77,7 @@ fun Game.draw(textImage: TextImage) {
     while (log.size > 5) { // fixme: magic constant
       log.poll()
     }
-    for ((i, msg) in log.withIndex()) {
+    for ((i, msg) in log.reversed().withIndex()) {
       val msgStartPos = 1.x + (i * 2).y
       drawText(msgStartPos, msg)
     }
