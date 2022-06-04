@@ -179,7 +179,7 @@ sealed class RPS : Comparable<RPS> {
   @Serializable
   object Scissors : RPS()
 
-  private fun stronger(): RPS {
+  fun stronger(): RPS {
     return when (this) {
       Rock -> Paper
       Paper -> Scissors
@@ -399,6 +399,13 @@ fun randomLevel(roomSize: Dimension, numberOfRooms: Int): Level {
     (levelDimensionInRooms.height * roomSize.height - levelDimensionInRooms.height + 1)
   val level = LevelMap(levelDimension)
 
+  return Level(level, rooms).also { putWallsOn(it) }
+}
+
+fun putWallsOn(level: Level) {
+  val roomSize = level.rooms.initialRoom.size
+  val roomGrid = level.rooms.roomGrid
+
   val walls = run {
     val (width, height) = roomSize
 
@@ -413,13 +420,11 @@ fun randomLevel(roomSize: Dimension, numberOfRooms: Int): Level {
 
   roomGrid.dimension.allPositions().mapNotNull { roomGrid[it] }.forEach { room ->
     walls.map { it + room.from }.forEach {
-      if (level.entityAt(it) == null) {
-        level.addEntity(Block(RPS.random()), it)
+      if (level.levelMap.entityAt(it) == null) {
+        level.levelMap.addEntity(Block(RPS.random()), it)
       }
     }
   }
-
-  return Level(level, rooms)
 }
 
 fun inhabit(level: Level): Arena {
