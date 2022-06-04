@@ -15,6 +15,17 @@ fun textCharacter(
     .withBackgroundColor(background)
 }
 
+fun TextImage.drawText(position: Position, text: CharSequence) {
+  for ((i, char) in text.withIndex()) {
+    val (x, y) = position + i.x
+    setCharacterAt(
+      x,
+      y,
+      textCharacter(char, TextColor.ANSI.WHITE_BRIGHT, background = TextColor.ANSI.BLACK_BRIGHT)
+    )
+  }
+}
+
 fun RPS.symbol(): Char {
   return when (this) {
     RPS.Rock -> '@'
@@ -47,17 +58,6 @@ fun PlayField.draw(textImage: TextImage, playFieldPos: Position) {
 }
 
 fun Game.draw(textImage: TextImage) {
-  fun drawText(position: Position, text: String) {
-    for ((i, char) in text.withIndex()) {
-      val (x, y) = position + i.x
-      textImage.setCharacterAt(
-        x,
-        y,
-        textCharacter(char, TextColor.ANSI.WHITE_BRIGHT, background = TextColor.ANSI.BLACK_BRIGHT)
-      )
-    }
-  }
-
   val imageSize = textImage.size.columns by textImage.size.rows
   val playFieldSize = playField.currentRoom.size
 
@@ -79,7 +79,7 @@ fun Game.draw(textImage: TextImage) {
     }
     for ((i, msg) in log.reversed().withIndex()) {
       val msgStartPos = 1.x + (i * 2).y
-      drawText(msgStartPos, msg)
+      textImage.drawText(msgStartPos, msg)
     }
   }
 
@@ -99,7 +99,7 @@ fun Game.draw(textImage: TextImage) {
       Direction.Left -> '<'
       Direction.Right -> '>'
     }
-    drawText(minimapPos - 2.y, "Minimap")
+    textImage.drawText(minimapPos - 2.y, "Minimap")
     for (roomPosInGrid in roomGrid.dimension.allPositions()) {
       val room = roomGrid[roomPosInGrid] ?: continue
       val containsPlayer = playField.arena.arenaMap.entities().filter { it.position in room }.any { it.entity is PlayerEntity }

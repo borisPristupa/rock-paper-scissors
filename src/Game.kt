@@ -29,7 +29,7 @@ class Game(world: World, playField: PlayField) {
   var playField = playField
     private set
 
-  val log: Queue<String> = LinkedList()
+  val log: Queue<CharSequence> = LinkedList()
 
   init {
     require(playField.arena in world.arenas)
