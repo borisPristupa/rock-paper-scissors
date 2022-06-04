@@ -1,7 +1,14 @@
 package com.boris.rps
 
+import java.util.IdentityHashMap
 import kotlin.random.Random
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
+@Serializable
 data class PositionAndEntity(val position: Position, val entity: Entity)
 
 interface EntityGrid {
@@ -28,7 +35,7 @@ interface EntityGrid {
 
 abstract class AbstractEntityGrid(final override val dimension: Dimension) : EntityGrid {
   private val grid = Grid<Entity?>(dimension, null)
-  private val positions = mutableMapOf<Entity, Position>()
+  private val positions = IdentityHashMap<Entity, Position>()
 
   override fun entities(): List<PositionAndEntity> {
     return dimension.allPositions().mapNotNull { pos -> grid[pos]?.let { PositionAndEntity(pos, it) } }
@@ -86,9 +93,52 @@ abstract class AbstractEntityGrid(final override val dimension: Dimension) : Ent
   protected operator fun minusAssign(entity: Entity) {
     positions -= entity
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is AbstractEntityGrid) return false
+
+    if (dimension != other.dimension) return false
+    if (grid != other.grid) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = dimension.hashCode()
+    result = 31 * result + grid.hashCode()
+    result = 31 * result + positions.hashCode()
+    return result
+  }
 }
 
-class LevelMap(dimension: Dimension) : AbstractEntityGrid(dimension)
+@Serializable(with = LevelMap.Serializer::class)
+class LevelMap(dimension: Dimension) : AbstractEntityGrid(dimension) {
+  object Serializer : KSerializer<LevelMap> {
+    @Serializable
+    @SerialName("LevelMap")
+    private data class LevelMapSurrogate(
+      val dimension: Dimension,
+      val entities: List<PositionAndEntity>
+    )
+
+    override val descriptor = LevelMapSurrogate.serializer().descriptor
+
+    override fun deserialize(decoder: Decoder): LevelMap {
+      val surrogate = decoder.decodeSerializableValue(LevelMapSurrogate.serializer())
+      return LevelMap(surrogate.dimension).apply {
+        for ((pos, entity) in surrogate.entities) {
+          addEntity(entity, pos)
+        }
+      }
+    }
+
+    override fun serialize(encoder: Encoder, value: LevelMap) {
+      val surrogate = LevelMapSurrogate(value.dimension, value.entities())
+      encoder.encodeSerializableValue(LevelMapSurrogate.serializer(), surrogate)
+    }
+  }
+}
 
 class ArenaMap(val levelMap: LevelMap) : AbstractEntityGrid(levelMap.dimension) {
   override fun entities(): List<PositionAndEntity> {
@@ -120,9 +170,13 @@ class ArenaMap(val levelMap: LevelMap) : AbstractEntityGrid(levelMap.dimension) 
   }
 }
 
+@Serializable
 sealed class RPS : Comparable<RPS> {
+  @Serializable
   object Rock : RPS()
+  @Serializable
   object Paper : RPS()
+  @Serializable
   object Scissors : RPS()
 
   private fun stronger(): RPS {
@@ -148,6 +202,7 @@ sealed class RPS : Comparable<RPS> {
   }
 }
 
+@Serializable
 class Room(
   val from: Position,
   val toExclusive: Position
@@ -157,26 +212,109 @@ class Room(
   operator fun contains(position: Position): Boolean {
     return (position - from) within size
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Room) return false
+
+    if (from != other.from) return false
+    if (toExclusive != other.toExclusive) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = from.hashCode()
+    result = 31 * result + toExclusive.hashCode()
+    return result
+  }
 }
 
+@Serializable(with = Rooms.Serializer::class)
 class Rooms(
   initialPos: Position,
   val roomGrid: Grid<Room?>
 ) {
   val initialRoom: Room = roomGrid[initialPos]!!
-
   fun allRooms(): List<Room> {
     return roomGrid.dimension.allPositions().mapNotNull { roomGrid[it] }
   }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Rooms) return false
+
+    if (roomGrid != other.roomGrid) return false
+    if (initialRoom != other.initialRoom) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = roomGrid.hashCode()
+    result = 31 * result + initialRoom.hashCode()
+    return result
+  }
+
+  object Serializer : KSerializer<Rooms> {
+    @Serializable
+    @SerialName("Rooms")
+    private data class RoomsSurrogate(
+      val initialPos: Position,
+      val dimension: Dimension,
+      val roomsList: List<Pair<Position, Room>>
+    )
+
+    override val descriptor = RoomsSurrogate.serializer().descriptor
+
+    override fun deserialize(decoder: Decoder): Rooms {
+      val surrogate = decoder.decodeSerializableValue(RoomsSurrogate.serializer())
+      val roomGrid = Grid<Room?>(surrogate.dimension, null)
+      for ((pos, room) in surrogate.roomsList) {
+        roomGrid[pos] = room
+      }
+      return Rooms(surrogate.initialPos, roomGrid)
+    }
+
+    override fun serialize(encoder: Encoder, value: Rooms) {
+      val roomPositions = value.roomGrid.dimension.allPositions()
+      val initialPos = roomPositions.first { value.roomGrid[it] == value.initialRoom }
+      val roomsList = roomPositions.mapNotNull { pos ->
+        value.roomGrid[pos]?.let { pos to it }
+      }
+      val surrogate = RoomsSurrogate(
+        initialPos,
+        value.roomGrid.dimension,
+        roomsList
+      )
+      encoder.encodeSerializableValue(RoomsSurrogate.serializer(), surrogate)
+    }
+  }
 }
 
+@Serializable
 data class Level(val levelMap: LevelMap, val rooms: Rooms)
 data class Arena(val arenaMap: ArenaMap, val rooms: Rooms)
 
-@JvmInline
-value class Terrain(val levels: List<Level>) {
+@Serializable
+class Terrain(val levels: List<Level>) {
   init {
     require(levels.isNotEmpty())
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as Terrain
+
+    if (levels != other.levels) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    return levels.hashCode()
   }
 }
 

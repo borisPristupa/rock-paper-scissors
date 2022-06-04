@@ -1,5 +1,6 @@
 plugins {
-  kotlin("jvm") version "1.6.10"
+  kotlin("jvm") version "1.6.21"
+  kotlin("plugin.serialization") version "1.6.21"
   id("org.jlleitschuh.gradle.ktlint") version "10.2.1"
   application
 }
@@ -14,6 +15,7 @@ repositories {
 dependencies {
   implementation(kotlin("stdlib"))
   implementation("com.googlecode.lanterna:lanterna:3.1.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")

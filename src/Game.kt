@@ -54,3 +54,8 @@ fun Game.reset() {
   val tmpGame = randomGame(playField.currentRoom.size)
   reset(tmpGame.world, tmpGame.playField)
 }
+
+fun Game.reset(terrain: Terrain) {
+  val arenas = terrain.levels.map { inhabit(it) }
+  reset(World(arenas), PlayField(arenas.first()))
+}

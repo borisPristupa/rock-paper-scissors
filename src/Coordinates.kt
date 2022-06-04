@@ -1,5 +1,9 @@
 package com.boris.rps
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Position(val x: Int, val y: Int) {
   operator fun plus(other: Position): Position {
     return Position(x + other.x, y + other.y)
@@ -17,13 +21,16 @@ data class Position(val x: Int, val y: Int) {
 val Int.x: Position get() = Position(this, 0)
 val Int.y: Position get() = Position(0, this)
 
+@Serializable
 data class Dimension(val width: Int, val height: Int) {
   init {
     require(width >= 0)
     require(height >= 0)
   }
 
+  @Contextual
   val xRange: IntRange = 0 until width
+  @Contextual
   val yRange: IntRange = 0 until height
 }
 
@@ -58,6 +65,24 @@ class Grid<T>(val dimension: Dimension, private val default: T) {
     return get(position).also {
       grid[position.y][position.x] = value
     }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Grid<*>) return false
+
+    if (dimension != other.dimension) return false
+    if (default != other.default) return false
+    if (grid != other.grid) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = dimension.hashCode()
+    result = 31 * result + (default?.hashCode() ?: 0)
+    result = 31 * result + grid.hashCode()
+    return result
   }
 }
 

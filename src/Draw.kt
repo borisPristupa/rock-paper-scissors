@@ -49,7 +49,7 @@ fun PlayField.draw(textImage: TextImage, playFieldPos: Position) {
     }
 
     val symbol = when (entity) {
-      is RpsEntity -> entity.type.symbol()
+      is RpsEntity -> entity.kind.symbol()
       else -> error("Don't know how to render entity $entity")
     }
 

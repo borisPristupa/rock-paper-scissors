@@ -66,16 +66,16 @@ class Player(private val actionSource: Queue<PlayerAction>, private val playerEn
           if (targetPos within map.dimension) {
             val targetEntity = map.entityAt(targetPos)
             if (targetEntity is RpsEntity) {
-              if (targetEntity.type < playerEntity.type) {
+              if (targetEntity.kind < playerEntity.kind) {
                 map.removeEntity(targetEntity)
-                playerEntity.type = targetEntity.type
-                val destroyedName = when (targetEntity.type) {
+                playerEntity.kind = targetEntity.kind
+                val destroyedName = when (targetEntity.kind) {
                   RPS.Paper -> "Paper"
                   RPS.Rock -> "Rock"
                   RPS.Scissors -> "Scissors"
                 }
                 game.log.add("$destroyedName destroyed")
-              } else if (targetEntity.type > playerEntity.type) {
+              } else if (targetEntity.kind > playerEntity.kind) {
                 game.reset()
                 game.log.add("WASTED")
               }
